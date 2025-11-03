@@ -1,5 +1,7 @@
 # terraform_aws_simple_infra
 A simple terraform config to spin out an EC2 instance.
+Please Note: the public key in the ec2_keys folder must be changed to suit your own key pair.
+
 ## Requirements
 
 | Name | Version |
