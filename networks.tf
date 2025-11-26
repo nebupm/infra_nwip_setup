@@ -80,6 +80,13 @@ resource "aws_security_group" "this_sg" {
     protocol    = "tcp"
     cidr_blocks = ["82.16.60.106/32"]
   }
+  # Allow SMB port for FSx communication
+  ingress {
+    from_port   = 445
+    to_port     = 445
+    protocol    = "tcp"
+    cidr_blocks = ["82.16.60.106/32"]
+  }
   ingress {
     from_port   = 3389
     to_port     = 3389
@@ -107,4 +114,8 @@ output "vpc_name" {
 output "public_subnet_name" {
   description = "Details of the main public subnet"
   value       = aws_subnet.this_public_subnet.tags.Name
+}
+
+output "vpc_id" {
+  value = aws_vpc.this_vpc.id
 }
