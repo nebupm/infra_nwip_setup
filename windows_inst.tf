@@ -52,6 +52,11 @@ variable "windows_ebs_volume_size_gb" {
   default = 30
 }
 
+variable "windows_enable_public_ip_address" {
+  type        = bool
+  description = "Whether to enable a public IP address for the Windows EC2 instance"
+  default     = true
+}
 #########################################################
 #  WINDOWS EC2 INSTANCE
 #########################################################
@@ -72,7 +77,7 @@ resource "aws_instance" "windows_instance" {
   vpc_security_group_ids      = [aws_security_group.this_sg.id]
   key_name                    = aws_key_pair.this_windows_keypair.key_name
   get_password_data           = true
-  associate_public_ip_address = true
+  associate_public_ip_address = var.windows_enable_public_ip_address
   user_data                   = <<-EOF
 <powershell>
 
@@ -165,3 +170,4 @@ output "windows_admin_password" {
   value       = var.create_windows_ec2 ? rsadecrypt(aws_instance.windows_instance[0].password_data, file("../../ec2_all_keys/aws-ec2-windows-instance-private-key.pem")) : null
   sensitive   = true
 }
+#Run the command : terraform  output windows_admin_password

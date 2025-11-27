@@ -8,12 +8,26 @@ variable "cloudtrail_enabled" {
   default     = true
 }
 
+variable "enable_management_events" {
+  type    = bool
+  default = true
+}
+
+variable "enable_s3_data_events" {
+  type    = bool
+  default = false
+}
+
+variable "enable_dynamodb_data_events" {
+  type    = bool
+  default = false
+}
 
 #########################################################
 # S3 Bucket and the Config.
 #########################################################
 resource "aws_s3_bucket" "cloudtrail_logs" {
-  bucket = "my-cloudtrail-logs-bucket-example" # change name
+  bucket = "cloudtrail-logs-${data.aws_caller_identity.current.account_id}"
 
   force_destroy = true # allow terraform destroy to remove bucket
 
@@ -48,7 +62,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail_logs" {
   restrict_public_buckets = true
 }
 
-# 🔥 Lifecycle: Keep logs for 7 days only
+# Lifecycle: Keep logs for 7 days only
 resource "aws_s3_bucket_lifecycle_configuration" "cloudtrail_logs" {
   bucket = aws_s3_bucket.cloudtrail_logs.id
 
@@ -109,9 +123,31 @@ resource "aws_cloudtrail" "this_cloudtrail" {
 
   event_selector {
     read_write_type           = "All"
-    include_management_events = true
+    include_management_events = var.enable_management_events
   }
 
+  dynamic "event_selector" {
+    for_each = var.enable_s3_data_events ? [1] : []
+    content {
+      read_write_type = "All"
+      data_resource {
+        type   = "AWS::S3::Object"
+        values = ["arn:aws:s3:::"]
+      }
+    }
+  }
+  dynamic "event_selector" {
+    for_each = var.enable_dynamodb_data_events ? [1] : []
+
+    content {
+      read_write_type = "All"
+
+      data_resource {
+        type   = "AWS::DynamoDB::Table"
+        values = var.dynamodb_data_event_arns
+      }
+    }
+  }
   depends_on = [
     aws_s3_bucket_policy.cloudtrail_policy
   ]

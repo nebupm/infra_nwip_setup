@@ -103,7 +103,7 @@ resource "aws_security_group" "this_sg" {
 }
 
 #########################################################
-# VPC and SUBNETS
+# OUTPUTS - VPC and SUBNETS
 #########################################################
 
 output "vpc_name" {

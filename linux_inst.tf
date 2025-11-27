@@ -30,6 +30,13 @@ variable "linux_ebs_volume_size_gb" {
   type        = number
   default     = 4
 }
+
+variable "linux_enable_public_ip_address" {
+  type        = bool
+  description = "Whether to enable a public IP address for the Linux EC2 instance"
+  default     = true
+}
+# Setup EC2 instance
 #########################################################
 # EC2 INSTANCE
 #########################################################
@@ -47,7 +54,7 @@ resource "aws_instance" "linux_instance" {
   subnet_id                   = aws_subnet.this_public_subnet.id
   vpc_security_group_ids      = [aws_security_group.this_sg.id]
   key_name                    = aws_key_pair.this_linux_keypair.key_name
-  associate_public_ip_address = true
+  associate_public_ip_address = var.linux_enable_public_ip_address
   user_data                   = <<-EOF
 #!/bin/bash
 exec > /var/log/user-data.log 2>&1
@@ -96,6 +103,9 @@ resource "aws_ebs_volume" "data_volume" {
   tags              = { Name = "${var.linux_instance_name}-data" }
 }
 
+#########################
+# Attach EBS volume
+#########################
 resource "aws_volume_attachment" "attach_data" {
   count        = var.create_linux_ec2 ? 1 : 0
   device_name  = "/dev/sdf"
